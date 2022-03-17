@@ -18,7 +18,11 @@ let authenticate = async function (req, res, next) {
 
 let authorise = async function (req, res, next) {
   let id = req.params.blogId
+  
   let jwtToken = req.headers['x-api-key']
+  // if(id!=jwtToken){
+  //   return res.status(401).send({msg:"invalid id"})
+  // }
   try {
     let blogs = await blogModel.findById(id)
     if (!blogs) return res.status(404).send({ status: false, msg: "please provide valid blog ID" })
