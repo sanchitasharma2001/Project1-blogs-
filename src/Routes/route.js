@@ -1,26 +1,29 @@
 const express = require('express');
-const authorController = require('../controllers/authorController')
-const blogsController = require('../controllers/blogsController')
-const middleware = require("../middleware/auth.js")
-const router= express.Router();
+const router = express.Router();
+const AuthorController=require("../controllers/authorController")
+const BlogsController=require("../controllers/blogsController")
+const Middleware=require("../middleware/auth")
 
 
-router.post("/authors",authorController.createAuthor)
-router.post("/blogs",blogsController.createBlog)
-router.get("/getblogs", blogsController.getBlogs)
-router.put("/updatedblogs/:blogId", blogsController.updateblog)
-router.delete("/Deleteblogs/:blogId", blogsController.deleteBlog)
-router.delete("/deletebyQuery", blogsController.deletebyQuery)
 
-router.post("/login", blogsController.loginUser)
-router.post("/authors",authorController.createAuthor)
-router.post("/createblogs",middleware.authenticate, blogsController.createBlog)
-router.get("/getblogs",middleware.authenticate, blogsController.getBlogs)
-router.put("/updateblogs/:blogId",middleware.authenticate, blogsController.updateblog)
-router.delete("/Deleteblogs/:blogId",middleware.authenticate,middleware.authorise, blogsController.deleteBlog)
-router.delete("/deletebyQuery",middleware.authenticate, blogsController.deletebyQuery)
+//Phase1:
+router.post("/authors",AuthorController.createAuthor )
 
-module.exports =router
+router.post("/blogs",Middleware.authenticationUser, BlogsController.createBlogs )
+
+router.get("/blogs",Middleware.authenticationUser, BlogsController.getBlogs)
+
+router.put("/blogs/:blogId/:authorId",Middleware.authenticationUser, Middleware.authorisationUser, BlogsController.updateBlogs)
+
+router.delete("/blogs/:blogId/:authorId",Middleware.authenticationUser, Middleware.authorisationUser, BlogsController.deleteBlogById)
+
+router.delete("/blogs",Middleware.authenticationUser,BlogsController.deleteBlogByQueryParams)
+
+
+//Phase2:
+router.post("/login", AuthorController.loginUser)
+
+module.exports = router;
 
 
 

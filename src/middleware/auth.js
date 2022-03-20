@@ -1,44 +1,47 @@
 const jwt = require("jsonwebtoken");
-const blogModel = require("../models/blogsModel")
 
 
-let authenticate = async function (req, res, next) {
+const authenticationUser=function(req,res,next)
+{
   try {
-    let token = req.headers['x-api-key']
-    if (!token) return res.status(400).send({ status: false, msg: "please provide token" })
-    let validateToken = jwt.verify(token, "group13")
-    if (!validateToken) return res.status(401).send({ status: false, msg: "authentication failed" })
-    next()
-  }
-  catch (err) {
-    console.log("This is the error :", err.message)
-    res.status(500).send({ msg: "Error", error: err.message })
-  }
-}
+    let token = req.headers["x-api-key"];
+    if (!token) return res.status(400).send({ status: false, msg: "token must be present" });
 
-let authorise = async function (req, res, next) {
-  let id = req.params.blogId
+ let decodedToken = jwt.verify(token, "functionup-thorium-group13");//verifying token with secret key
+ 
+
+  if (!decodedToken)
+    return res.status(401).send({ status: false, msg: "token is invalid" });//validating token value inside decodedToken
+    req.authorId = decodedToken.authorId;
+
+
+  next();
   
-  let jwtToken = req.headers['x-api-key']
-  // if(id!=jwtToken){
-  //   return res.status(401).send({msg:"invalid id"})
-  // }
-  try {
-    let blogs = await blogModel.findById(id)
-    if (!blogs) return res.status(404).send({ status: false, msg: "please provide valid blog ID" })
-    if (blogs.isDeleted == true) return res.status(404).send({ status: false, msg: "no such blog found" })
-
-    let verifiedToken = jwt.verify(jwtToken, "group13")
-    if (verifiedToken.authorId != blogs.authorId) return res.status(403).send({ status: false, msg: "unauthorize access " })
-
-    next()
-  }
-  catch (err) {
-    console.log("This is the error :", err.message)
-    res.status(500).send({ msg: "Error", error: err.message })
-  }
+}
+catch(error)
+{
+  res.status(500).send({msg:"Error", error:error.message})
+}
 }
 
+const authorisationUser=function(req,res,next)
+{
+  try {
+  let token = req.headers["x-api-key"];
 
-module.exports.authenticate = authenticate
-module.exports.authorise = authorise
+  let decodedToken = jwt.verify(token, "functionup-thorium-group13");
+
+  let authorisedUser=decodedToken.authorId;
+  let logedInUser=req.params.authorId;
+ 
+  if(authorisedUser!==logedInUser) return res.status(401).send({status:false,msg:"You are not an authorized person to make these changes"})
+  next();  
+}
+catch(error)
+{
+  return res.status(500).send({msg:"Error", error:error.message})
+}
+}
+module.exports.authenticationUser = authenticationUser;
+
+module.exports.authorisationUser = authorisationUser;
